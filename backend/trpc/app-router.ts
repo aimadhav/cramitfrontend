@@ -1,9 +1,9 @@
-import { createTRPCRouter } from "./create-context";
-import { hiProcedure } from "./routes/example/hi/route";
-import { flashcardRouter } from "./routes/flashcards/router";
-import { authRouter } from "./routes/auth/router";
-import { deckRouter } from "./routes/deck.router";
-import { adminRouter } from "./routes/adminRouter";
+import { createTRPCRouter } from "./create-context.js";
+import { hiProcedure } from "./routes/example/hi/route.js";
+import { flashcardRouter } from "./routes/flashcards/router.js";
+import { authRouter } from "./routes/auth/router.js";
+import { deckRouter } from "./routes/deck.router.js";
+import { adminRouter } from "./routes/adminRouter.js";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({

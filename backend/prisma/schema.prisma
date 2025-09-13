@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  // We will use Supabase Auth, so passwordHash is not stored here directly by Prisma
+  name      String?  // Added from your types/index.ts
+  phone     String?  // Added from your types/index.ts
+  isPremium Boolean  @default(false) // Added from your types/index.ts
+  isAdmin   Boolean  @default(false) // For Admin Panel access control
+  // studyStatsJson String? // For storing studyStats as a JSON string if not modeling separately. 
+                          // Or create a separate StudyStats model linked to User.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  decks     Deck[]
+  flashcardStatuses UserFlashcardStatus[]
+}
+
+model Deck {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  tags        String[]  @default([]) // Added from your types/index.ts
+  isPremium   Boolean   @default(false) // Added from your types/index.ts
+  isPublic    Boolean   @default(false) // For sharing decks
+  price       Float?    // Added from your types/index.ts
+  coverImage  String?   // Added from your types/index.ts
+  subject     String?   // Added from your types/index.ts
+  chapter     String?   // Added from your types/index.ts
+  // cardCount is a derived value, typically not stored directly but calculated.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String    // Foreign key to link to the User
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards  Flashcard[]
+
+  @@index([isPublic]) // Index for isPublic field
+}
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  front       String
+  back        String
+  contentType String   // e.g., 'text', 'latex', 'image' - Corresponds to ContentType in types/index.ts
+  mediaUrls   String[] @default([]) // Added from your types/index.ts (optional)
+  tags        String[] @default([]) // Added from your types/index.ts
+  // deckId is already here, linking to Deck
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deckId      String   // Foreign key to link to the Deck
+  deck        Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userStatuses UserFlashcardStatus[]
+}
+
+model UserFlashcardStatus {
+  id           String    @id @default(cuid())
+  userId       String
+  flashcardId  String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard    Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  // User-specific SRS fields
+  interval     Int       @default(1)     // Days until next review
+  easeFactor   Float     @default(2.5)   // How easy the card is
+  repetitions  Int       @default(0)     // Number of times reviewed
+  dueDate      DateTime  @default(now())  // Timestamp when card is due
+  lastReviewed DateTime?                 // Timestamp of last review
+  
+  // Additional user-specific metadata
+  isBookmarked Boolean   @default(false)
+  isLearned    Boolean   @default(false) // Tracks if user explicitly marked as learned
+  isDeleted    Boolean   @default(false) // For soft-deleting a card from a user's view/queue
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, flashcardId]) // Ensures a user has only one status per flashcard
+}
+
+
+// Consider a separate model for StudyStats if it becomes complex
+// model UserStudyStats {
+//   id                  String @id @default(cuid())
+//   userId              String @unique
+//   user                User   @relation(fields: [userId], references: [id])
+//   totalCardsStudied   Int    @default(0)
+//   totalTimeStudied    Int    @default(0) // in minutes
+//   streakDays          Int    @default(0)
+//   lastStudyDate       DateTime?
+// }
+
+// For ContentType, you might use an Prisma enum if your DB supports it well,
+// or stick to String and validate in your application code.
+// enum ContentTypeEnum {
+//  text
+//  image
+//  latex
+//  audio
+//  mixed
+// }
+// And then in Flashcard: contentType ContentTypeEnum

@@ -1,69 +1,97 @@
-import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { initTRPC, TRPCError } from "@trpc/server";
-import type { PrismaClient, User as PrismaAppUser } from "@prisma/client";
-import { getPrismaClient } from '../prisma/client';
-import { createClient, SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js";
-import superjson from 'superjson';
+import { getPrismaClient } from "../prisma/client.js";
+import { createClient } from "@supabase/supabase-js";
+// import superjson from "superjson";
 
-// Initialize Supabase Client options (from .env)
-console.log("[Backend Context] Raw EXPO_PUBLIC_SUPABASE_URL from process.env:", process.env.EXPO_PUBLIC_SUPABASE_URL);
-console.log("[Backend Context] Raw EXPO_PUBLIC_SUPABASE_ANON_KEY from process.env exists:", !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+console.log("[Backend Context] create-context.ts loaded");
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Hardcoded values instead of dotenv
+const PORT = 8081;
+const CORS_ORIGIN = "*";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Supabase URL or Anon Key is not defined in .env");
-}
+const isDev = true; // since you're running local/dev
+console.log("[Backend Context] Hardcoded ENV values loaded.");
+
+// Supabase Config (Hardcoded)
+const supabaseUrl = "https://megjoogojbtiqyjxfnve.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZ2pvb2dvamJ0aXF5anhmbnZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5Nzc4MjYsImV4cCI6MjA2MzU1MzgyNn0.gXRXBVjgYDq38RDEmycOiwRXYChgE3AD5t5-7dVUrvs";
+
+const databaseUrl =
+  "postgresql://postgres.megjoogojbtiqyjxfnve:MADHAV%402005joshi@aws-0-ap-south-1.pooler.supabase.com:6543/postgres";
+
+const testDatabaseUrl =
+  "postgresql://postgres:madhav@123@localhost:5432/cramit_test";
+
+const apiUrl = "http:// 192.168.0.104:8081";
 
 // Helper function to get user from JWT
-const getUserFromHeader = async (
-  req: FetchCreateContextFnOptions["req"],
-  supabase: SupabaseClient
-): Promise<SupabaseUser | null> => {
+const getUserFromHeader = async (req, supabase) => {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
-    console.log("[Backend Context] getUserFromHeader: No authorization header found.");
+    console.log(
+      "[Backend Context] getUserFromHeader: No authorization header found."
+    );
     return null;
   }
+
   const token = authHeader.split("Bearer ")[1];
   if (!token) {
-    console.log("[Backend Context] getUserFromHeader: Authorization header found, but no token after 'Bearer '.");
+    console.log(
+      "[Backend Context] getUserFromHeader: Authorization header found, but no token after 'Bearer '."
+    );
     return null;
   }
-  // TEMPORARY LOG: Output the received token for debugging.
-  // REMOVE THIS IN PRODUCTION OR AFTER DEBUGGING - TOKENS ARE SENSITIVE.
-  console.log("[Backend Context] getUserFromHeader: Received token:", token ? token.substring(0, 20) + '...' : 'EMPTY_TOKEN'); 
 
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (isDev && token) {
+    console.log(
+      "[Backend Context] getUserFromHeader: Received token:",
+      token.substring(0, 20) + "..."
+    );
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
   if (error) {
-    console.error("[Backend Context] getUserFromHeader: Error getting user from Supabase token:", error.message);
-    console.error("[Backend Context] getUserFromHeader: Supabase auth error object:", JSON.stringify(error, null, 2)); // Log the full error object
+    console.error(
+      "[Backend Context] getUserFromHeader: Error getting user from Supabase token:",
+      error.message
+    );
+    console.error(
+      "[Backend Context] getUserFromHeader: Supabase auth error object:",
+      JSON.stringify(error, null, 2)
+    );
     return null;
   }
+
   if (!user) {
-    console.log("[Backend Context] getUserFromHeader: Supabase returned no error, but no user object was found for the token.");
+    console.log(
+      "[Backend Context] getUserFromHeader: Supabase returned no error, but no user object was found for the token."
+    );
     return null;
   }
-  console.log("[Backend Context] getUserFromHeader: Successfully retrieved user from token. User ID:", user.id);
+
+  console.log(
+    "[Backend Context] getUserFromHeader: Successfully retrieved user from token. User ID:",
+    user.id
+  );
   return user;
 };
 
-// Define the Context type explicitly
-export type Context = {
-  req: FetchCreateContextFnOptions["req"];
-  prisma: PrismaClient;
-  supabase: SupabaseClient;
-  supabaseUser: SupabaseUser | null;
-  prismaUser: PrismaAppUser | null;
-  timestamp: number;
-};
-
 // Context creation function
-export const createContext = async (opts: FetchCreateContextFnOptions): Promise<Context> => {
+export const createContext = async (opts) => {
+  console.log("[Backend Context] createContext called for new request");
+
   const currentPrismaClient = getPrismaClient();
 
-  // Create a new Supabase client for each request
+  console.log(
+    "[Backend Context] Attempting to create Supabase client with URL:",
+    supabaseUrl
+  );
+
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
@@ -72,33 +100,37 @@ export const createContext = async (opts: FetchCreateContextFnOptions): Promise<
     },
   });
 
+  console.log("[Backend Context] Supabase client created successfully.");
+
   const supabaseUser = await getUserFromHeader(opts.req, supabase);
   const timestamp = Date.now();
 
-  let prismaUser: PrismaAppUser | null = null;
+  let prismaUser = null;
   if (supabaseUser) {
     prismaUser = await currentPrismaClient.user.findUnique({
       where: { id: supabaseUser.id },
     });
   }
 
-  // Note: __manuallyParsedInput is added by the wrapper in [trpc]+api.ts
-  // So the object returned here doesn't strictly need it, but the type Context does.
-  return { req: opts.req, prisma: currentPrismaClient, supabase, supabaseUser, prismaUser, timestamp };
+  return {
+    req: opts.req,
+    prisma: currentPrismaClient,
+    supabase,
+    supabaseUser,
+    prismaUser,
+    timestamp,
+  };
 };
 
 // Initialize tRPC
-// The context type is now explicitly defined for initTRPC
-const t = initTRPC.context<Context>().create({
-  // transformer: superjson, // Commented out superjson transformer
+const t = initTRPC.context().create({
   errorFormatter({ shape, error }) {
     return {
       ...shape,
       data: {
         ...shape.data,
         errorCode: error.code,
-        // Potentially add more error details in development
-        ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
+        ...(isDev && { stack: error.stack }),
       },
     };
   },
@@ -127,9 +159,7 @@ const isAuthenticated = t.middleware(async ({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      // supabaseUser and prismaUser are already part of ctx due to createContext
-      // The crucial part is to make ctx.user available to the resolver, which expects it.
-      user: ctx.prismaUser, // Explicitly map prismaUser to user for the procedure's context
+      user: ctx.prismaUser,
     },
   });
 });

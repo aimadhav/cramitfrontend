@@ -1,13 +1,13 @@
 import { createTRPCReact } from "@trpc/react-query";
 import { httpBatchLink } from "@trpc/client";
-import type { AppRouter } from "@/backend/trpc/app-router";
+// import type { AppRouter } from "@/backend/trpc/app-router";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import * as SecureStore from 'expo-secure-store';
 // superjson is not currently used, can be commented or removed if not planned for re-addition
 // import superjson from 'superjson';
 
-export const trpc = createTRPCReact<AppRouter>();
+export const trpc = createTRPCReact<any>();
 
 const getBaseUrl = () => {
   // Get the localhost URL for the appropriate platform

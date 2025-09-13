@@ -1,6 +1,7 @@
-import { createTRPCRouter } from '../create-context';
+import { createTRPCRouter } from '../create-context.js';
 import { adminProcedure } from '../procedures/adminProcedure';
 import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
 
 export const adminRouter = createTRPCRouter({
   /**
@@ -31,7 +32,13 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const adminUserId = ctx.prismaUser.id;
+      const adminUserId = ctx.prismaUser?.id;
+      if (!adminUserId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Admin user ID is required',
+        });
+      }
       const newDeck = await ctx.prisma.deck.create({
         data: {
           name: input.name,

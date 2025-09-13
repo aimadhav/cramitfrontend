@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, publicProcedure, protectedProcedure } from '../../create-context';
+import { createTRPCRouter, publicProcedure, protectedProcedure } from '../../create-context.js';
 import { TRPCError } from '@trpc/server';
 
 const createFlashcardInput = z.object({
@@ -208,11 +208,11 @@ export const flashcardRouter = createTRPCRouter({
       // If user is logged in, fetch their statuses for these cards
       // This is a simplified example; for production, you might want to do this more efficiently
       let flashcardsWithStatus = flashcards as Array<typeof flashcards[0] & { userStatus?: any }>;
-      if (ctx.user) {
+      if (ctx.prismaUser) {
         const flashcardIds = flashcards.map(fc => fc.id);
         const statuses = await ctx.prisma.userFlashcardStatus.findMany({
           where: {
-            userId: ctx.user.id,
+            userId: ctx.prismaUser.id,
             flashcardId: { in: flashcardIds },
             isDeleted: false, // Only include non-deleted statuses
           },
@@ -247,12 +247,12 @@ export const flashcardRouter = createTRPCRouter({
       }
 
       let userStatus: any | undefined = undefined; // Define userStatus outside
-      if (ctx.user) {
+      if (ctx.prismaUser) {
         // If user is authenticated, try to fetch their specific status for this card
-        console.log(`[RouterLog] getById: Attempting to find UserFlashcardStatus for userId: ${ctx.user.id}, flashcardId: ${card.id}, isDeleted: false`);
+        console.log(`[RouterLog] getById: Attempting to find UserFlashcardStatus for userId: ${ctx.prismaUser.id}, flashcardId: ${card.id}, isDeleted: false`);
         userStatus = await ctx.prisma.userFlashcardStatus.findUnique({
           where: {
-            userId_flashcardId: { userId: ctx.user.id, flashcardId: card.id },
+            userId_flashcardId: { userId: ctx.prismaUser.id, flashcardId: card.id },
             isDeleted: false, // Ensure we only get active statuses
           },
         });

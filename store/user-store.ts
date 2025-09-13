@@ -4,6 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store'; 
 import { Platform } from 'react-native';
 
+
+const clearTokens = async () => {
+  await SecureStore.deleteItemAsync('sessionToken');
+  await SecureStore.deleteItemAsync('sessionRefreshToken');
+};
+
+
 export interface AppUser {
   id: string;
   name: string | null;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "../../create-context";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../../create-context.js";
 import { TRPCError } from "@trpc/server";
 
 export const authRouter = createTRPCRouter({

@@ -1,7 +1,14 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { createContext } from '../../../backend/trpc/create-context';
-import { appRouter } from '../../../backend/trpc/app-router';
+// import type { createContext } from '../../../backend/trpc/create-context';
+// import type { appRouter } from '../../../backend/trpc/app-router';
 import { NextRequest, NextResponse } from 'next/server';
+
+// Dynamic imports to avoid bundling backend code in frontend
+const getBackendModules = async () => {
+  // const { createContext: createContextFn } = await import('../../../backend/trpc/create-context');
+// const { appRouter: router } = await import('../../../backend/trpc/app-router');
+  return { createContext: createContextFn, appRouter: router };
+};
 
 const handler = async (req: NextRequest) => {
   console.log(`[TRPC API Handler] Received ${req.method} request for ${req.url}`);
@@ -30,6 +37,9 @@ const handler = async (req: NextRequest) => {
     }
   }
   */
+
+  // Dynamically import backend modules
+  const { createContext, appRouter } = await getBackendModules();
 
   // The original 'req' object's body should still be available here for fetchRequestHandler
   return fetchRequestHandler({

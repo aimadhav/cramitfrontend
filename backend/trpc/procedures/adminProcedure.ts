@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { protectedProcedure } from '../create-context'; // Corrected path
+import { protectedProcedure } from '../create-context.js'; // Corrected path
 
 /**
  * Middleware to check if the authenticated Prisma user is an administrator.
@@ -11,7 +11,7 @@ export const adminProcedure = protectedProcedure.use(async (opts) => {
 
   // protectedProcedure already ensures ctx.prismaUser is not null.
   // We also know from schema changes that prismaUser has an `isAdmin` property.
-  if (!ctx.prismaUser.isAdmin) {
+  if (!ctx.prismaUser?.isAdmin) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Administrator access required. You do not have permission to perform this action.',

@@ -1,0 +1,28 @@
+{
+  "name": "cramit-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader ts-node/esm server.ts",
+    "build": "tsc",
+    "start:prod": "cross-env DATABASE_URL=postgresql://postgres.megjoogojbtiqyjxfnve:MADHAV%402005joshi@aws-0-ap-south-1.pooler.supabase.com:6543/postgres NODE_ENV=production node dist/server.js"
+,
+    "migrate:deploy": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.3",
+    "@hono/trpc-server": "0.3.4",
+    "@prisma/client": "^6.8.2",
+    "@supabase/supabase-js": "^2.49.8",
+    "@trpc/server": "11.1.2",
+    "hono": "4.7.10",
+    "superjson": "2.2.2",
+    "zod": "3.25.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "prisma": "^6.8.2",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.3"
+  }
+} 

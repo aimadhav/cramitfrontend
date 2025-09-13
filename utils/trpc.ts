@@ -1,5 +1,5 @@
 import { createTRPCReact, httpBatchLink, loggerLink } from '@trpc/react-query';
-import type { AppRouter } from '../backend/trpc/app-router';
+// import type { AppRouter } from '../backend/trpc/app-router';
 import { Platform, Alert } from 'react-native';
 import { useUserStore, REFRESH_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY, AppUser } from '../store/user-store';
 import Constants from "expo-constants";
@@ -10,7 +10,7 @@ import { TRPCResponse, TRPCErrorShape } from "@trpc/server/rpc";
 
 // Note: We are NOT using superjson here due to previous issues with Expo API routes.
 
-export const trpc = createTRPCReact<AppRouter>();
+export const trpc = createTRPCReact<any>();
 
 const getBaseUrl = () => {
   // 1. Always prioritize EXPO_PUBLIC_API_URL if available

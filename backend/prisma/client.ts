@@ -20,6 +20,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+console.log("[Prisma Client] Existing global prisma instance:", globalThis.prisma ? "YES ✅" : "NO ❌");
+
 const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 export const getPrismaClient = () => {

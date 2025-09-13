@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { createTRPCRouter } from '../create-context'; // Path to your createTRPCRouter
-import { adminProcedure } from '../procedures/adminProcedure'; // Path to your adminProcedure
+import { createTRPCRouter } from '../create-context.js'; // Path to your createTRPCRouter
+import { adminProcedure } from '../procedures/adminProcedure.js'; // Path to your adminProcedure
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client'; // Import Prisma for error types
 
@@ -35,7 +35,7 @@ export const adminRouter = createTRPCRouter({
   createDeck: adminProcedure
     .input(adminCreateDeckInput)
     .mutation(async ({ ctx, input }) => {
-      const userIdToAssign = input.userId || ctx.prismaUser.id;
+      const userIdToAssign = input.userId || ctx.prismaUser?.id;
       try {
         return await ctx.prisma.deck.create({
           data: {
@@ -228,7 +228,7 @@ export const adminRouter = createTRPCRouter({
 
       // Basic check: Prevent admin from removing their own admin status if they are the one making the call.
       // A more robust solution would check if they are the *only* admin.
-      if (ctx.prismaUser.id === userId && !isAdmin) {
+      if (ctx.prismaUser?.id === userId && !isAdmin) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Admin cannot remove their own admin status through this endpoint.',
